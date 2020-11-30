@@ -21,6 +21,9 @@ Server: test-server/fake
 #
 # Client-side
 <client>
+<features>
+!hyper
+</features>
 <server>
 http
 </server>

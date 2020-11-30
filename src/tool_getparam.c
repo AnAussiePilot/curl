@@ -1203,6 +1203,10 @@ ParameterError getparameter(const char *flag, /* f or -long-flag */
       switch(subletter) {
       case '\0':
         /* HTTP version 1.0 */
+        if((curlinfo->age >= CURLVERSION_NINETH) &&
+           curlinfo->hyper_version)
+          /* A Hyper build of libcurl doesn't support 1.0 requests */
+          return PARAM_LIBCURL_DOESNT_SUPPORT;
         config->httpversion = CURL_HTTP_VERSION_1_0;
         break;
       case '1':

@@ -350,38 +350,47 @@ static CURLcode hyperstream(struct Curl_easy *data,
     result = status_line(data, conn,
                          http_status, http_version, reasonp, reason_len);
     if(result)
-      return result;
+      break;
 
     headers = hyper_response_headers(resp);
     if(!headers) {
       failf(data, "hyperstream: couldn't get response headers\n");
-      return CURLE_RECV_ERROR;
+      result = CURLE_RECV_ERROR;
+      break;
     }
 
     /* the headers are already received */
     hyper_headers_foreach(headers, hyper_each_header, data);
-    if(data->state.hresult)
-      return data->state.hresult;
+    if(data->state.hresult) {
+      result = data->state.hresult;
+      break;
+    }
 
     if(empty_header(data)) {
       failf(data, "hyperstream: couldn't pass blank header\n");
-      return CURLE_OUT_OF_MEMORY;
+      result = CURLE_OUT_OF_MEMORY;
+      break;
     }
 
     resp_body = hyper_response_body(resp);
     if(!resp_body) {
       failf(data, "hyperstream: couldn't get response body\n");
-      return CURLE_RECV_ERROR;
+      result = CURLE_RECV_ERROR;
+      break;
     }
     foreach = hyper_body_foreach(resp_body, hyper_body_chunk, data);
     if(!foreach) {
       failf(data, "hyperstream: body foreach failed\n");
-      return CURLE_OUT_OF_MEMORY;
+      result = CURLE_OUT_OF_MEMORY;
+      break;
     }
     hyper_executor_push(h->exec, foreach);
 
-    hyper_response_free(resp); /* done with it? */
+    hyper_response_free(resp);
+    resp = NULL;
   } while(1);
+  if(resp)
+    hyper_response_free(resp);
   return result;
 }
 
